@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "meu_Banco.h"
+#include "meu_banco.h"
 
 int main() {
     int opcao;
