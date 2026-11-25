@@ -1,58 +1,38 @@
 #ifndef MEU_BANCO_H
 #define MEU_BANCO_H
 
-#define MAX_CLIENTES 100
+#define MAX_CONTAS 100
 #define MAX_MOVIMENTOS 50
 
-
 struct Movimento {
-    char operacao[20];   
-    int tipoConta;       
+    char operacao[20];
+    int tipoConta;
     float valor;
 };
 
-
-struct Cliente {
-    char nome[50];
-    int numero;             
-
-    int temCorrente;        
+struct Conta {
+    int numero;
+    int temCorrente;
     int temSalario;
     int temPoupanca;
-
     float saldoCorrente;
     float saldoSalario;
     float saldoPoupanca;
-
-    int fezEmprestimo;      
-    int temTitulo;           
-
+    int fezEmprestimo;
+    int temTitulo;
     struct Movimento historico[MAX_MOVIMENTOS];
     int qtdMovimentos;
 };
 
-extern struct Cliente clientes[MAX_CLIENTES];
-extern int qtdClientes;
+extern struct Conta contas[MAX_CONTAS];
+extern int qtdContas;
 extern int bancoAberto;
 
-
-float saldoTotalCliente(int i);
-float limiteEmprestimo(int i);
-int aptoEmprestimo(int i);
-int aptoTitulo(int i);
-void registrarMovimento(int i, char operacao[], int tipoConta, float valor);
-int buscarCliente(int numero);
-
-
-void cadastrarCliente();
-int escolherConta(int i);
-void depositar(int i);
-void sacar(int i);
-void solicitarEmprestimo(int i);
-void comprarTitulo(int i);
-void verExtrato(int i);
-void acessarConta();
-
+float saldoTotalConta(int indice);
+float limiteEmprestimo(int indice);
+int aptoEmprestimo(int indice);
+int aptoTitulo(int indice);
+void registrarMovimento(int indice, char operacao[], int tipoConta, float valor);
 
 void abrirBanco();
 void consultarHistorico();
