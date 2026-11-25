@@ -3,30 +3,22 @@
 #include <string.h>
 #include "meu_banco.h"
 
-/* variaveis globais do banco (declaradas com extern no meu_banco.h) */
 struct Cliente clientes[MAX_CLIENTES];
 int qtdClientes = 0;
 int bancoAberto = 0;
 
-/* guarda quem ganhou o sorteio */
 int qtdContemplados = 0;
-int contemplado[MAX_CLIENTES];      /* posicao do cliente no vetor */
+int contemplado[MAX_CLIENTES];
 float premioContemplado[MAX_CLIENTES];
-
-
-/* ===================== FUNCOES AUXILIARES ===================== */
 
 float saldoTotalCliente(int i) {
     return clientes[i].saldoCorrente + clientes[i].saldoSalario + clientes[i].saldoPoupanca;
 }
 
-/* Limite do emprestimo: 25% de dez vezes o saldo total */
 float limiteEmprestimo(int i) {
     return 0.25 * (10 * saldoTotalCliente(i));
 }
 
-/* Pode pedir emprestimo: tem conta corrente, tem saldo na poupanca
-   e ainda nao fez nenhum emprestimo */
 int aptoEmprestimo(int i) {
     if (clientes[i].temCorrente == 1 && clientes[i].temPoupanca == 1 &&
         clientes[i].saldoPoupanca > 0 && clientes[i].fezEmprestimo == 0) {
@@ -35,7 +27,6 @@ int aptoEmprestimo(int i) {
     return 0;
 }
 
-/* Pode comprar titulo: saldo da conta salario entre 1000 e 1500 */
 int aptoTitulo(int i) {
     if (clientes[i].temSalario == 1 &&
         clientes[i].saldoSalario >= 1000 && clientes[i].saldoSalario <= 1500) {
@@ -61,11 +52,8 @@ int buscarCliente(int numero) {
             return i;
         }
     }
-    return -1;   /* nao encontrou */
+    return -1;
 }
-
-
-/* ===================== CADASTRO ===================== */
 
 void cadastrarCliente() {
     int i = qtdClientes;
@@ -75,7 +63,6 @@ void cadastrarCliente() {
 
     clientes[i].numero = 1000 + i;
 
-    /* escolhe as contas, sem permitir corrente + salario juntas */
     do {
         printf("Abrir conta corrente? (1-Sim 0-Nao): ");
         scanf("%d", &clientes[i].temCorrente);
@@ -93,7 +80,6 @@ void cadastrarCliente() {
     } while ((clientes[i].temCorrente == 1 && clientes[i].temSalario == 1) ||
              (clientes[i].temCorrente == 0 && clientes[i].temSalario == 0 && clientes[i].temPoupanca == 0));
 
-    /* todos os saldos comecam zerados */
     clientes[i].saldoCorrente = 0;
     clientes[i].saldoSalario = 0;
     clientes[i].saldoPoupanca = 0;
@@ -110,11 +96,6 @@ void cadastrarCliente() {
     qtdClientes++;
 }
 
-
-/* ===================== OPERACOES DO CLIENTE ===================== */
-
-/* Pergunta a conta e confere se o cliente tem ela.
-   Retorna 1, 2 ou 3, ou 0 se a conta nao existir */
 int escolherConta(int i) {
     int tipo;
     printf("Qual conta? (1-Corrente 2-Salario 3-Poupanca): ");
@@ -163,8 +144,6 @@ void sacar(int i) {
         return;
     }
 
-    /* A conta corrente pode ficar negativa.
-       Salario e poupanca precisam ter saldo. */
     if (tipo == 1) {
         clientes[i].saldoCorrente -= valor;
     } else if (tipo == 2 && valor <= clientes[i].saldoSalario) {
@@ -201,7 +180,7 @@ void solicitarEmprestimo(int i) {
         return;
     }
 
-    clientes[i].saldoCorrente += valor;     /* o dinheiro cai na conta corrente */
+    clientes[i].saldoCorrente += valor;
     clientes[i].fezEmprestimo = 1;
     registrarMovimento(i, "Emprestimo", 1, valor);
     printf("Emprestimo aprovado!\n");
@@ -251,7 +230,6 @@ void acessarConta() {
     do {
         printf("\n--- Cliente: %s (%d) ---\n", clientes[i].nome, clientes[i].numero);
 
-        /* alerta toda vez que acessar, enquanto a corrente estiver negativa */
         if (clientes[i].temCorrente == 1 && clientes[i].saldoCorrente < 0) {
             printf("*** ALERTA: sua conta corrente esta negativa! Saldo: R$ %.2f ***\n",
                    clientes[i].saldoCorrente);
@@ -277,9 +255,6 @@ void acessarConta() {
         }
     } while (opcao != 0);
 }
-
-
-/* ===================== MENU PRINCIPAL ===================== */
 
 void abrirBanco() {
     int n, i, opcao;
@@ -360,7 +335,6 @@ void efetuarSorteio() {
         return;
     }
 
-    /* ordena as posicoes dos clientes do maior saldo para o menor (bubble sort) */
     for (i = 0; i < qtdClientes; i++) {
         ordem[i] = i;
     }
@@ -374,7 +348,6 @@ void efetuarSorteio() {
         }
     }
 
-    /* mostra os 5 maiores e confere se todos tem titulo */
     printf("\n== 5 maiores saldos ==\n");
     for (i = 0; i < 5; i++) {
         printf("%d - %s | R$ %.2f\n", i, clientes[ordem[i]].nome, saldoTotalCliente(ordem[i]));
@@ -386,10 +359,7 @@ void efetuarSorteio() {
         }
     }
 
-    /* Sorteio por Fibonacci: sorteia um n, calcula o n-esimo termo
-       e usa o resto da divisao por 5 para achar o vencedor.
-       (ajustar aqui se o algoritmo visto em sala for diferente) */
-    n = rand() % 20 + 10;     /* n entre 10 e 29 */
+    n = rand() % 20 + 10;
     a = 0;
     b = 1;
     for (i = 0; i < n; i++) {
@@ -403,7 +373,6 @@ void efetuarSorteio() {
 
     printf("n = %d | Fibonacci(%d) = %d | %d %% 5 = %d\n", n, n, fib, fib, posicao);
 
-    /* premio: dez vezes o saldo da conta salario, depositado nela */
     premio = 10 * clientes[vencedor].saldoSalario;
     clientes[vencedor].saldoSalario += premio;
     registrarMovimento(vencedor, "Premio", 2, premio);
