@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "meu_Banco.h"
+#include "meu_banco.h"
 
 struct Conta contas[MAX_CONTAS];
 int qtdContas = 0;
