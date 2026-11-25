@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include "meu_banco.h"
+#include "meu_Banco.h"
 
 int main() {
     int opcao;
@@ -22,12 +22,18 @@ int main() {
                 abrirBanco();
                 break;
             case 2:
-                if (bancoAberto == 1) consultarHistorico();
-                else printf("O banco precisa estar aberto!\n");
+                if (bancoAberto == 1) {
+                    consultarHistorico();
+                } else {
+                    printf("O banco precisa estar aberto!\n");
+                }
                 break;
             case 3:
-                if (bancoAberto == 1) efetuarSorteio();
-                else printf("O banco precisa estar aberto!\n");
+                if (bancoAberto == 1) {
+                    efetuarSorteio();
+                } else {
+                    printf("O banco precisa estar aberto!\n");
+                }
                 break;
             case 4:
                 printf("Saindo do sistema...\n");
