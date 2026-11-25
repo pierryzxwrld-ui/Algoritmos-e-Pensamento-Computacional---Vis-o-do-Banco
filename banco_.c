@@ -1,385 +1,167 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "meu_banco.h"
+#include "meu_Banco.h"
 
-struct Cliente clientes[MAX_CLIENTES];
-int qtdClientes = 0;
+struct Conta contas[MAX_CONTAS];
+int qtdContas = 0;
 int bancoAberto = 0;
 
 int qtdContemplados = 0;
-int contemplado[MAX_CLIENTES];
-float premioContemplado[MAX_CLIENTES];
+int contemplado[MAX_CONTAS];
+float premioContemplado[MAX_CONTAS];
 
-float saldoTotalCliente(int i) {
-    return clientes[i].saldoCorrente + clientes[i].saldoSalario + clientes[i].saldoPoupanca;
+float saldoTotalConta(int indice) {
+    return contas[indice].saldoCorrente + contas[indice].saldoSalario + contas[indice].saldoPoupanca;
 }
 
-float limiteEmprestimo(int i) {
-    return 0.25 * (10 * saldoTotalCliente(i));
+float limiteEmprestimo(int indice) {
+    return 0.25 * (10 * saldoTotalConta(indice));
 }
 
-int aptoEmprestimo(int i) {
-    if (clientes[i].temCorrente == 1 && clientes[i].temPoupanca == 1 &&
-        clientes[i].saldoPoupanca > 0 && clientes[i].fezEmprestimo == 0) {
+int aptoEmprestimo(int indice) {
+    if (contas[indice].temCorrente == 1 && contas[indice].temPoupanca == 1 && contas[indice].saldoPoupanca > 0 && contas[indice].fezEmprestimo == 0) {
         return 1;
     }
     return 0;
 }
 
-int aptoTitulo(int i) {
-    if (clientes[i].temSalario == 1 &&
-        clientes[i].saldoSalario >= 1000 && clientes[i].saldoSalario <= 1500) {
+int aptoTitulo(int indice) {
+    if (contas[indice].temSalario == 1 && contas[indice].saldoSalario >= 1000 && contas[indice].saldoSalario <= 1500) {
         return 1;
     }
     return 0;
 }
 
-void registrarMovimento(int i, char operacao[], int tipoConta, float valor) {
-    int q = clientes[i].qtdMovimentos;
-    if (q < MAX_MOVIMENTOS) {
-        strcpy(clientes[i].historico[q].operacao, operacao);
-        clientes[i].historico[q].tipoConta = tipoConta;
-        clientes[i].historico[q].valor = valor;
-        clientes[i].qtdMovimentos++;
+void registrarMovimento(int indice, char operacao[], int tipoConta, float valor) {
+    int pos = contas[indice].qtdMovimentos;
+    if (pos < MAX_MOVIMENTOS) {
+        strcpy(contas[indice].historico[pos].operacao, operacao);
+        contas[indice].historico[pos].tipoConta = tipoConta;
+        contas[indice].historico[pos].valor = valor;
+        contas[indice].qtdMovimentos++;
     }
-}
-
-int buscarCliente(int numero) {
-    int i;
-    for (i = 0; i < qtdClientes; i++) {
-        if (clientes[i].numero == numero) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-void cadastrarCliente() {
-    int i = qtdClientes;
-
-    printf("Nome do cliente: ");
-    scanf(" %[^\n]", clientes[i].nome);
-
-    clientes[i].numero = 1000 + i;
-
-    do {
-        printf("Abrir conta corrente? (1-Sim 0-Nao): ");
-        scanf("%d", &clientes[i].temCorrente);
-        printf("Abrir conta salario?  (1-Sim 0-Nao): ");
-        scanf("%d", &clientes[i].temSalario);
-        printf("Abrir conta poupanca? (1-Sim 0-Nao): ");
-        scanf("%d", &clientes[i].temPoupanca);
-
-        if (clientes[i].temCorrente == 1 && clientes[i].temSalario == 1) {
-            printf("Nao e permitido ter conta salario e conta corrente ao mesmo tempo!\n");
-        }
-        if (clientes[i].temCorrente == 0 && clientes[i].temSalario == 0 && clientes[i].temPoupanca == 0) {
-            printf("O cliente precisa ter pelo menos uma conta!\n");
-        }
-    } while ((clientes[i].temCorrente == 1 && clientes[i].temSalario == 1) ||
-             (clientes[i].temCorrente == 0 && clientes[i].temSalario == 0 && clientes[i].temPoupanca == 0));
-
-    clientes[i].saldoCorrente = 0;
-    clientes[i].saldoSalario = 0;
-    clientes[i].saldoPoupanca = 0;
-    clientes[i].fezEmprestimo = 0;
-    clientes[i].temTitulo = 0;
-    clientes[i].qtdMovimentos = 0;
-
-    printf("Contas criadas: ");
-    if (clientes[i].temCorrente == 1) printf("%d-01  ", clientes[i].numero);
-    if (clientes[i].temSalario == 1)  printf("%d-02  ", clientes[i].numero);
-    if (clientes[i].temPoupanca == 1) printf("%d-03  ", clientes[i].numero);
-    printf("\n");
-
-    qtdClientes++;
-}
-
-int escolherConta(int i) {
-    int tipo;
-    printf("Qual conta? (1-Corrente 2-Salario 3-Poupanca): ");
-    scanf("%d", &tipo);
-
-    if ((tipo == 1 && clientes[i].temCorrente == 1) ||
-        (tipo == 2 && clientes[i].temSalario == 1) ||
-        (tipo == 3 && clientes[i].temPoupanca == 1)) {
-        return tipo;
-    }
-    printf("O cliente nao possui essa conta.\n");
-    return 0;
-}
-
-void depositar(int i) {
-    int tipo = escolherConta(i);
-    float valor;
-
-    if (tipo == 0) return;
-
-    printf("Valor do deposito: R$ ");
-    scanf("%f", &valor);
-    if (valor <= 0) {
-        printf("Valor invalido.\n");
-        return;
-    }
-
-    if (tipo == 1) clientes[i].saldoCorrente += valor;
-    if (tipo == 2) clientes[i].saldoSalario += valor;
-    if (tipo == 3) clientes[i].saldoPoupanca += valor;
-
-    registrarMovimento(i, "Deposito", tipo, valor);
-    printf("Deposito realizado!\n");
-}
-
-void sacar(int i) {
-    int tipo = escolherConta(i);
-    float valor;
-
-    if (tipo == 0) return;
-
-    printf("Valor do saque: R$ ");
-    scanf("%f", &valor);
-    if (valor <= 0) {
-        printf("Valor invalido.\n");
-        return;
-    }
-
-    if (tipo == 1) {
-        clientes[i].saldoCorrente -= valor;
-    } else if (tipo == 2 && valor <= clientes[i].saldoSalario) {
-        clientes[i].saldoSalario -= valor;
-    } else if (tipo == 3 && valor <= clientes[i].saldoPoupanca) {
-        clientes[i].saldoPoupanca -= valor;
-    } else {
-        printf("Saldo insuficiente.\n");
-        return;
-    }
-
-    registrarMovimento(i, "Saque", tipo, valor);
-    printf("Saque realizado!\n");
-}
-
-void solicitarEmprestimo(int i) {
-    float valor;
-
-    if (clientes[i].fezEmprestimo == 1) {
-        printf("O cliente ja fez um emprestimo. So e permitido um por cliente.\n");
-        return;
-    }
-    if (aptoEmprestimo(i) == 0) {
-        printf("Emprestimo negado: e preciso ter conta corrente e saldo na poupanca.\n");
-        return;
-    }
-
-    printf("Limite disponivel: R$ %.2f\n", limiteEmprestimo(i));
-    printf("Valor do emprestimo: R$ ");
-    scanf("%f", &valor);
-
-    if (valor <= 0 || valor > limiteEmprestimo(i)) {
-        printf("Valor invalido ou acima do limite.\n");
-        return;
-    }
-
-    clientes[i].saldoCorrente += valor;
-    clientes[i].fezEmprestimo = 1;
-    registrarMovimento(i, "Emprestimo", 1, valor);
-    printf("Emprestimo aprovado!\n");
-}
-
-void comprarTitulo(int i) {
-    if (clientes[i].temTitulo == 1) {
-        printf("O cliente ja possui titulo de capitalizacao.\n");
-    } else if (aptoTitulo(i) == 0) {
-        printf("Compra negada: e preciso ter entre R$ 1000,00 e R$ 1500,00 na conta salario.\n");
-    } else {
-        clientes[i].temTitulo = 1;
-        printf("Titulo de capitalizacao adquirido!\n");
-    }
-}
-
-void verExtrato(int i) {
-    int m;
-
-    printf("\n== Extrato de %s ==\n", clientes[i].nome);
-    if (clientes[i].temCorrente == 1) printf("Corrente %d-01 | R$ %.2f\n", clientes[i].numero, clientes[i].saldoCorrente);
-    if (clientes[i].temSalario == 1)  printf("Salario  %d-02 | R$ %.2f\n", clientes[i].numero, clientes[i].saldoSalario);
-    if (clientes[i].temPoupanca == 1) printf("Poupanca %d-03 | R$ %.2f\n", clientes[i].numero, clientes[i].saldoPoupanca);
-
-    printf("-- Historico --\n");
-    for (m = 0; m < clientes[i].qtdMovimentos; m++) {
-        printf("%s | conta %d-0%d | R$ %.2f\n",
-               clientes[i].historico[m].operacao,
-               clientes[i].numero,
-               clientes[i].historico[m].tipoConta,
-               clientes[i].historico[m].valor);
-    }
-}
-
-void acessarConta() {
-    int numero, i, opcao;
-
-    printf("Numero do cliente (ex.: 1000): ");
-    scanf("%d", &numero);
-
-    i = buscarCliente(numero);
-    if (i == -1) {
-        printf("Cliente nao encontrado.\n");
-        return;
-    }
-
-    do {
-        printf("\n--- Cliente: %s (%d) ---\n", clientes[i].nome, clientes[i].numero);
-
-        if (clientes[i].temCorrente == 1 && clientes[i].saldoCorrente < 0) {
-            printf("*** ALERTA: sua conta corrente esta negativa! Saldo: R$ %.2f ***\n",
-                   clientes[i].saldoCorrente);
-        }
-
-        printf("1 - Depositar\n");
-        printf("2 - Sacar\n");
-        printf("3 - Solicitar emprestimo\n");
-        printf("4 - Comprar titulo de capitalizacao\n");
-        printf("5 - Ver extrato\n");
-        printf("0 - Sair da conta\n");
-        printf("Opcao: ");
-        scanf("%d", &opcao);
-
-        switch (opcao) {
-            case 1: depositar(i); break;
-            case 2: sacar(i); break;
-            case 3: solicitarEmprestimo(i); break;
-            case 4: comprarTitulo(i); break;
-            case 5: verExtrato(i); break;
-            case 0: break;
-            default: printf("Opcao invalida.\n");
-        }
-    } while (opcao != 0);
 }
 
 void abrirBanco() {
-    int n, i, opcao;
+    int qtd, cont;
 
     if (bancoAberto == 0) {
         bancoAberto = 1;
         printf("\nBanco aberto!\n");
-        printf("Quantos clientes deseja cadastrar? ");
-        scanf("%d", &n);
+        printf("Quantas contas deseja inicializar? ");
+        scanf("%d", &qtd);
 
-        for (i = 0; i < n && qtdClientes < MAX_CLIENTES; i++) {
-            printf("\n-- Cliente %d --\n", i + 1);
-            cadastrarCliente();
+        for (cont = 0; cont < qtd && qtdContas < MAX_CONTAS; cont++) {
+            contas[qtdContas].numero = 1000 + qtdContas;
+            contas[qtdContas].temCorrente = 1;
+            contas[qtdContas].temSalario = 0;
+            contas[qtdContas].temPoupanca = 1;
+            contas[qtdContas].saldoCorrente = 0;
+            contas[qtdContas].saldoSalario = 0;
+            contas[qtdContas].saldoPoupanca = 0;
+            contas[qtdContas].fezEmprestimo = 0;
+            contas[qtdContas].temTitulo = 0;
+            contas[qtdContas].qtdMovimentos = 0;
+            printf("Conta inicializada: %d\n", contas[qtdContas].numero);
+            qtdContas++;
         }
+    } else {
+        printf("\nO banco ja esta aberto.\n");
     }
-
-    do {
-        printf("\n--- BANCO ABERTO ---\n");
-        printf("1 - Acessar conta de cliente\n");
-        printf("0 - Voltar ao menu principal\n");
-        printf("Opcao: ");
-        scanf("%d", &opcao);
-
-        if (opcao == 1) {
-            acessarConta();
-        }
-    } while (opcao != 0);
 }
 
 void consultarHistorico() {
-    int i;
+    int cont;
     float total = 0;
 
-    for (i = 0; i < qtdClientes; i++) {
-        total += saldoTotalCliente(i);
+    for (cont = 0; cont < qtdContas; cont++) {
+        total += saldoTotalConta(cont);
     }
 
     printf("\n== Saldo Total do banco ==\n");
-    printf("%d | R$ %.2f\n", qtdClientes, total);
+    printf("%d | R$ %.2f\n", qtdContas, total);
 
-    printf("== Clientes Aptos a Emprestimos ==\n");
-    for (i = 0; i < qtdClientes; i++) {
-        if (aptoEmprestimo(i) == 1) {
-            printf("%s|%d-01|R$ %.2f\n", clientes[i].nome, clientes[i].numero, limiteEmprestimo(i));
+    printf("== Contas Aptas a Emprestimos ==\n");
+    for (cont = 0; cont < qtdContas; cont++) {
+        if (aptoEmprestimo(cont) == 1) {
+            printf("%d-01|R$ %.2f\n", contas[cont].numero, limiteEmprestimo(cont));
         }
     }
 
-    printf("== Clientes com Saldo Negativo na Conta Corrente ==\n");
-    for (i = 0; i < qtdClientes; i++) {
-        if (clientes[i].temCorrente == 1 && clientes[i].saldoCorrente < 0) {
-            printf("%s|%d-01|R$ %.2f\n", clientes[i].nome, clientes[i].numero, clientes[i].saldoCorrente);
+    printf("== Contas com Saldo Negativo na Conta Salario ==\n");
+    for (cont = 0; cont < qtdContas; cont++) {
+        if (contas[cont].temSalario == 1 && contas[cont].saldoSalario < 0) {
+            printf("%d-02|R$ %.2f\n", contas[cont].numero, contas[cont].saldoSalario);
         }
     }
 
-    printf("== Clientes Aptos a Compra de Titulos ==\n");
-    for (i = 0; i < qtdClientes; i++) {
-        if (aptoTitulo(i) == 1 && clientes[i].temTitulo == 0) {
-            printf("%s|%d-02|R$ %.2f\n", clientes[i].nome, clientes[i].numero, clientes[i].saldoSalario);
+    printf("== Contas Aptas a Compra de Titulos ==\n");
+    for (cont = 0; cont < qtdContas; cont++) {
+        if (aptoTitulo(cont) == 1 && contas[cont].temTitulo == 0) {
+            printf("%d-02|R$ %.2f\n", contas[cont].numero, contas[cont].saldoSalario);
         }
     }
 
-    printf("== Clientes Contemplado no Sorteio ==\n");
-    for (i = 0; i < qtdContemplados; i++) {
-        int c = contemplado[i];
-        printf("%s|%d-02|R$ %.2f\n", clientes[c].nome, clientes[c].numero, premioContemplado[i]);
+    printf("== Contas Contempladas no Sorteio ==\n");
+    for (cont = 0; cont < qtdContemplados; cont++) {
+        int idx = contemplado[cont];
+        printf("%d|R$ %.2f\n", contas[idx].numero, premioContemplado[cont]);
     }
 }
 
 void efetuarSorteio() {
-    int ordem[MAX_CLIENTES];
-    int i, j, aux;
-    int n, fib, a, b;
+    int ordem[MAX_CONTAS];
+    int cont, cont2, aux;
+    int termo, fib, anterior, atual;
     int posicao, vencedor;
     float premio;
 
-    if (qtdClientes < 5) {
-        printf("Sao necessarios pelo menos 5 clientes para o sorteio.\n");
+    if (qtdContas < 5) {
+        printf("Sao necessarios pelo menos 5 registros para o sorteio.\n");
         return;
     }
 
-    for (i = 0; i < qtdClientes; i++) {
-        ordem[i] = i;
+    for (cont = 0; cont < qtdContas; cont++) {
+        ordem[cont] = cont;
     }
-    for (i = 0; i < qtdClientes - 1; i++) {
-        for (j = 0; j < qtdClientes - 1 - i; j++) {
-            if (saldoTotalCliente(ordem[j]) < saldoTotalCliente(ordem[j + 1])) {
-                aux = ordem[j];
-                ordem[j] = ordem[j + 1];
-                ordem[j + 1] = aux;
+
+    for (cont = 0; cont < qtdContas - 1; cont++) {
+        for (cont2 = 0; cont2 < qtdContas - 1 - cont; cont2++) {
+            if (saldoTotalConta(ordem[cont2]) < saldoTotalConta(ordem[cont2 + 1])) {
+                aux = ordem[cont2];
+                ordem[cont2] = ordem[cont2 + 1];
+                ordem[cont2 + 1] = aux;
             }
         }
     }
 
-    printf("\n== 5 maiores saldos ==\n");
-    for (i = 0; i < 5; i++) {
-        printf("%d - %s | R$ %.2f\n", i, clientes[ordem[i]].nome, saldoTotalCliente(ordem[i]));
-    }
-    for (i = 0; i < 5; i++) {
-        if (clientes[ordem[i]].temTitulo == 0) {
-            printf("Sorteio cancelado: %s nao possui titulo de capitalizacao.\n", clientes[ordem[i]].nome);
+    for (cont = 0; cont < 5; cont++) {
+        if (contas[ordem[cont]].temTitulo == 0) {
+            printf("Sorteio cancelado: conta %d nao possui titulo de capitalizacao.\n", contas[ordem[cont]].numero);
             return;
         }
     }
 
-    n = rand() % 20 + 10;
-    a = 0;
-    b = 1;
-    for (i = 0; i < n; i++) {
-        fib = a + b;
-        a = b;
-        b = fib;
+    termo = rand() % 20 + 10;
+    anterior = 0;
+    atual = 1;
+    for (cont = 0; cont < termo; cont++) {
+        fib = anterior + atual;
+        anterior = atual;
+        atual = fib;
     }
-    fib = a;
+    fib = anterior;
     posicao = fib % 5;
     vencedor = ordem[posicao];
 
-    printf("n = %d | Fibonacci(%d) = %d | %d %% 5 = %d\n", n, n, fib, fib, posicao);
-
-    premio = 10 * clientes[vencedor].saldoSalario;
-    clientes[vencedor].saldoSalario += premio;
-    registrarMovimento(vencedor, "Premio", 2, premio);
+    premio = 10 * saldoTotalConta(vencedor);
+    contas[vencedor].saldoCorrente += premio;
+    registrarMovimento(vencedor, "Premio", 1, premio);
 
     contemplado[qtdContemplados] = vencedor;
     premioContemplado[qtdContemplados] = premio;
     qtdContemplados++;
 
-    printf("Vencedor: %s | Premio: R$ %.2f\n", clientes[vencedor].nome, premio);
+    printf("Vencedor: conta %d | Premio: R$ %.2f\n", contas[vencedor].numero, premio);
 }
